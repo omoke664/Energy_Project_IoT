@@ -1,0 +1,40 @@
+name: Deploy Flask App to Azure
+
+on:
+  push:
+    branches:
+      - main  # Deploy when code is pushed to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Zip the application
+        run: zip -r app.zip . -x "env/*" ".git/*"
+
+      - name: Azure Login with OIDC
+        uses: azure/login@v1
+        with:
+          client-id: 7b073e50-7f31-4143-9722-ef90bd72390b
+          tenant-id: 06dfbf3c-cdd4-47f5-b677-024d4606ef65
+          allow-no-subscriptions: true
+
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: "flask-energy-app"  
+          package: app.zip
